@@ -4,13 +4,13 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "lib": ["ESNext", "esnext.asynciterable", "DOM"],
-    "baseUrl": ".",
-    "rootDir": ".",
+    "baseUrl": "src",
+    "rootDir": "src",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "#modules/*": ["src/modules/*"],
-      "#common/*": ["src/common/*"]
+      "#modules/*": ["modules/*"],
+      "#common/*": ["common/*"]
     },
     "types": ["node"],
     "typeRoots": ["./node_modules/@types"],
