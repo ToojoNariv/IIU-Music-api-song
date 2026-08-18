@@ -1,8 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [{ "source": "(.*)", "destination": "/api" }],
-  "regions": ["bom1"],
-  "outputDirectory": "dist",
+  "regions": ["bom1", "cdg1", "fra1"],
   "headers": [
     {
       "source": "(.*)",
@@ -17,19 +16,11 @@
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET, OPTIONS"
+          "value": "GET, POST, OPTIONS"
         },
         {
           "key": "Cache-Control",
           "value": "s-maxage=300, stale-while-revalidate"
-        },
-        {
-          "key": "Author",
-          "value": "Sandip Gurung"
-        },
-        {
-          "key": "Github",
-          "value": "https://github.com/Sandipeyy/NepoTuneAPI"
         }
       ]
     }

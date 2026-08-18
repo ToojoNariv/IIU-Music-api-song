@@ -6,12 +6,12 @@
   "license": "MIT",
   "repository": "https://github.com/Sandipeyy/NepoTuneAPI",
   "author": "Sandip Gurung",
-  "main": "dist/server.js",
-  "module": "dist/index.js",
+  "main": "src/server.ts",
+  "module": "src/server.ts",
   "types": "dist/index.d.ts",
   "exports": {
-    "require": "./dist/index.js",
-    "import": "./dist/index.js"
+    "require": "./src/server.ts",
+    "import": "./src/server.ts"
   },
   "sideEffects": false,
   "imports": {
@@ -29,22 +29,13 @@
   "scripts": {
     "dev": "bun run --hot src/server.ts",
     "start": "bun dist/server.js",
-    "prebuild": "rm -rf dist",
     "build": "tsc && tsc-alias",
     "format": "prettier --write \"./**/*.{js,ts,json}\"",
     "lint": "eslint .",
     "lint:fix": "bun run lint --fix",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "deploy": "wrangler deploy",
-    "prerelease": "bun run test",
-    "release": "bun run changelogen --release --push",
-    "spell-check": "cspell .",
-    "postinstall": "npx simple-git-hooks"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "bun run lint && bun run format",
-    "commit-msg": "bun run commitlint --edit $1"
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.0",
@@ -69,7 +60,6 @@
     "eslint": "^9.23.0",
     "eslint-plugin-prettier": "^5.2.5",
     "prettier": "^3.5.3",
-    "simple-git-hooks": "^2.12.1",
     "tsc-alias": "^1.8.13",
     "typescript": "^5.8.2",
     "vitest": "^3.0.9",
