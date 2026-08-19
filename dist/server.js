@@ -1,6 +1,6 @@
 import { AlbumController, ArtistController, SearchController, SongController } from './modules/index.js';
 import { PlaylistController } from './modules/playlists/controllers/index.js';
-import { App } from './app.js';
+import { App } from './application.js';
 const app = new App([
     new SearchController(),
     new SongController(),
