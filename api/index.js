@@ -2,7 +2,7 @@
 import { handle } from "@hono/node-server/vercel";
 
 // src/modules/albums/controllers/album.controller.ts
-import { createRoute, OpenAPIHono, z as z5 } from "@hono/zod-openapi";
+import { createRoute, OpenAPIHono, z as z6 } from "@hono/zod-openapi";
 
 // src/common/models/download.model.ts
 import { z } from "zod";
@@ -10,6 +10,9 @@ var DownloadLinkModel = z.object({
   quality: z.string(),
   url: z.string()
 });
+
+// src/modules/songs/models/song-suggestion.model.ts
+import { z as z4 } from "zod";
 
 // src/modules/artists/models/artist-map.model.ts
 import { z as z2 } from "zod";
@@ -114,45 +117,56 @@ var SongModel = z3.object({
   downloadUrl: z3.array(DownloadLinkModel)
 });
 
+// src/modules/songs/models/song-suggestion.model.ts
+var SongStationAPIResponseModel = z4.record(
+  z4.string(),
+  z4.object({
+    song: SongAPIResponseModel
+  })
+);
+var SongSuggestionAPIResponseModel = z4.object({
+  stationid: z4.string()
+}).and(SongStationAPIResponseModel);
+
 // src/modules/albums/models/album.model.ts
-import { z as z4 } from "zod";
-var AlbumAPIResponseModel = z4.object({
-  id: z4.string(),
-  title: z4.string(),
-  subtitle: z4.string(),
-  header_desc: z4.string(),
-  type: z4.string(),
-  perma_url: z4.string(),
-  image: z4.string(),
-  language: z4.string(),
-  year: z4.string(),
-  play_count: z4.string(),
-  explicit_content: z4.string(),
-  list_count: z4.string(),
-  list_type: z4.string(),
-  list: z4.array(SongAPIResponseModel),
-  more_info: z4.object({
+import { z as z5 } from "zod";
+var AlbumAPIResponseModel = z5.object({
+  id: z5.string(),
+  title: z5.string(),
+  subtitle: z5.string(),
+  header_desc: z5.string(),
+  type: z5.string(),
+  perma_url: z5.string(),
+  image: z5.string(),
+  language: z5.string(),
+  year: z5.string(),
+  play_count: z5.string(),
+  explicit_content: z5.string(),
+  list_count: z5.string(),
+  list_type: z5.string(),
+  list: z5.array(SongAPIResponseModel),
+  more_info: z5.object({
     artistMap: SongAPIResponseModel.shape.more_info.shape.artistMap,
-    song_count: z4.string(),
-    copyright_text: z4.string(),
-    is_dolby_content: z4.boolean(),
-    label_url: z4.string()
+    song_count: z5.string(),
+    copyright_text: z5.string(),
+    is_dolby_content: z5.boolean(),
+    label_url: z5.string()
   })
 });
-var AlbumModel = z4.object({
-  id: z4.string(),
-  name: z4.string(),
-  description: z4.string(),
-  year: z4.number().nullable(),
-  type: z4.string(),
-  playCount: z4.number().nullable(),
-  language: z4.string(),
-  explicitContent: z4.boolean(),
-  artists: z4.object(SongModel.shape.artists.shape),
-  songCount: z4.number().nullable(),
-  url: z4.string(),
-  image: z4.array(DownloadLinkModel),
-  songs: z4.array(SongModel).nullable()
+var AlbumModel = z5.object({
+  id: z5.string(),
+  name: z5.string(),
+  description: z5.string(),
+  year: z5.number().nullable(),
+  type: z5.string(),
+  playCount: z5.number().nullable(),
+  language: z5.string(),
+  explicitContent: z5.boolean(),
+  artists: z5.object(SongModel.shape.artists.shape),
+  songCount: z5.number().nullable(),
+  url: z5.string(),
+  image: z5.array(DownloadLinkModel),
+  songs: z5.array(SongModel).nullable()
 });
 
 // src/common/constants/endpoint.constant.ts
@@ -512,15 +526,15 @@ var AlbumController = class {
         description: "Retrieve an album by providing either an ID or a direct link to the album on JioSaavn.",
         operationId: "getAlbumByIdOrLink",
         request: {
-          query: z5.object({
-            id: z5.string().optional().openapi({
+          query: z6.object({
+            id: z6.string().optional().openapi({
               title: "Album ID",
               description: "The unique ID of the album",
               type: "string",
               example: "23241654",
               default: "23241654"
             }),
-            link: z5.string().url().optional().transform((value) => value?.match(/jiosaavn\.com\/album\/[^/]+\/([^/]+)$/)?.[1]).openapi({
+            link: z6.string().url().optional().transform((value) => value?.match(/jiosaavn\.com\/album\/[^/]+\/([^/]+)$/)?.[1]).openapi({
               title: "Album Link",
               description: "A direct link to the album on JioSaavn",
               type: "string",
@@ -534,8 +548,8 @@ var AlbumController = class {
             description: "Successful response with album details",
             content: {
               "application/json": {
-                schema: z5.object({
-                  success: z5.boolean().openapi({
+                schema: z6.object({
+                  success: z6.boolean().openapi({
                     description: "Indicates the success status of the request.",
                     type: "boolean",
                     example: true
@@ -562,321 +576,270 @@ var AlbumController = class {
 };
 
 // src/modules/search/controllers/search.controller.ts
-import { createRoute as createRoute2, OpenAPIHono as OpenAPIHono2, z as z11 } from "@hono/zod-openapi";
+import { createRoute as createRoute2, OpenAPIHono as OpenAPIHono2, z as z12 } from "@hono/zod-openapi";
 
 // src/modules/search/models/search.model.ts
-import { z as z6 } from "zod";
-var SearchAPIResponseModel = z6.object({
-  albums: z6.object({
-    data: z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        subtitle: z6.string(),
-        type: z6.string(),
-        image: z6.string(),
-        perma_url: z6.string(),
-        more_info: z6.object({
-          music: z6.string(),
-          ctr: z6.number(),
-          year: z6.string(),
-          is_movie: z6.string(),
-          language: z6.string(),
-          song_pids: z6.string()
+import { z as z7 } from "zod";
+var SearchAPIResponseModel = z7.object({
+  albums: z7.object({
+    data: z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        subtitle: z7.string(),
+        type: z7.string(),
+        image: z7.string(),
+        perma_url: z7.string(),
+        more_info: z7.object({
+          music: z7.string(),
+          ctr: z7.number(),
+          year: z7.string(),
+          is_movie: z7.string(),
+          language: z7.string(),
+          song_pids: z7.string()
         }),
-        explicit_content: z6.string(),
-        mini_obj: z6.boolean(),
-        description: z6.string()
+        explicit_content: z7.string(),
+        mini_obj: z7.boolean(),
+        description: z7.string()
       })
     ),
-    position: z6.number()
+    position: z7.number()
   }),
-  songs: z6.object({
-    data: z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        subtitle: z6.string(),
-        type: z6.string(),
-        image: z6.string(),
-        perma_url: z6.string(),
-        more_info: z6.object({
-          album: z6.string(),
-          ctr: z6.number(),
-          score: z6.string().optional(),
-          vcode: z6.string(),
-          vlink: z6.string().optional(),
-          primary_artists: z6.string(),
-          singers: z6.string(),
-          video_available: z6.boolean(),
-          triller_available: z6.boolean(),
-          language: z6.string()
+  songs: z7.object({
+    data: z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        subtitle: z7.string(),
+        type: z7.string(),
+        image: z7.string(),
+        perma_url: z7.string(),
+        more_info: z7.object({
+          album: z7.string(),
+          ctr: z7.number(),
+          score: z7.string().optional(),
+          vcode: z7.string(),
+          vlink: z7.string().optional(),
+          primary_artists: z7.string(),
+          singers: z7.string(),
+          video_available: z7.boolean(),
+          triller_available: z7.boolean(),
+          language: z7.string()
         }),
-        explicit_content: z6.string(),
-        mini_obj: z6.boolean(),
-        description: z6.string()
+        explicit_content: z7.string(),
+        mini_obj: z7.boolean(),
+        description: z7.string()
       })
     ),
-    position: z6.number()
+    position: z7.number()
   }),
-  playlists: z6.object({
-    data: z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        subtitle: z6.string(),
-        type: z6.string(),
-        image: z6.string(),
-        perma_url: z6.string(),
-        more_info: z6.object({
-          firstname: z6.string(),
-          artist_name: z6.array(z6.string()),
-          entity_type: z6.string(),
-          entity_sub_type: z6.string(),
-          video_available: z6.boolean(),
-          is_dolby_content: z6.boolean(),
-          sub_types: z6.any(),
-          images: z6.any(),
-          lastname: z6.string(),
-          language: z6.string()
+  playlists: z7.object({
+    data: z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        subtitle: z7.string(),
+        type: z7.string(),
+        image: z7.string(),
+        perma_url: z7.string(),
+        more_info: z7.object({
+          firstname: z7.string(),
+          artist_name: z7.array(z7.string()),
+          entity_type: z7.string(),
+          entity_sub_type: z7.string(),
+          video_available: z7.boolean(),
+          is_dolby_content: z7.boolean(),
+          sub_types: z7.any(),
+          images: z7.any(),
+          lastname: z7.string(),
+          language: z7.string()
         }),
-        explicit_content: z6.string(),
-        mini_obj: z6.boolean(),
-        description: z6.string()
+        explicit_content: z7.string(),
+        mini_obj: z7.boolean(),
+        description: z7.string()
       })
     ),
-    position: z6.number()
+    position: z7.number()
   }),
-  artists: z6.object({
-    data: z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        image: z6.string(),
-        extra: z6.string(),
-        type: z6.string(),
-        mini_obj: z6.boolean(),
-        isRadioPresent: z6.boolean(),
-        ctr: z6.number(),
-        entity: z6.number(),
-        description: z6.string(),
-        position: z6.number()
+  artists: z7.object({
+    data: z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        image: z7.string(),
+        extra: z7.string(),
+        type: z7.string(),
+        mini_obj: z7.boolean(),
+        isRadioPresent: z7.boolean(),
+        ctr: z7.number(),
+        entity: z7.number(),
+        description: z7.string(),
+        position: z7.number()
       })
     ),
-    position: z6.number()
+    position: z7.number()
   }),
-  topquery: z6.object({
-    data: z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        subtitle: z6.string(),
-        type: z6.string(),
-        image: z6.string(),
-        perma_url: z6.string(),
-        more_info: z6.object({
-          album: z6.string(),
-          ctr: z6.number(),
-          score: z6.string().optional(),
-          vcode: z6.string(),
-          vlink: z6.string(),
-          primary_artists: z6.string(),
-          singers: z6.string(),
-          video_available: z6.boolean(),
-          triller_available: z6.boolean(),
-          language: z6.string()
+  topquery: z7.object({
+    data: z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        subtitle: z7.string(),
+        type: z7.string(),
+        image: z7.string(),
+        perma_url: z7.string(),
+        more_info: z7.object({
+          album: z7.string(),
+          ctr: z7.number(),
+          score: z7.string().optional(),
+          vcode: z7.string(),
+          vlink: z7.string(),
+          primary_artists: z7.string(),
+          singers: z7.string(),
+          video_available: z7.boolean(),
+          triller_available: z7.boolean(),
+          language: z7.string()
         }),
-        explicit_content: z6.string().optional(),
-        mini_obj: z6.boolean(),
-        description: z6.string()
+        explicit_content: z7.string().optional(),
+        mini_obj: z7.boolean(),
+        description: z7.string()
       })
     ),
-    position: z6.number()
+    position: z7.number()
   })
 });
-var SearchResponseModel = (model) => z6.object({
+var SearchResponseModel = (model) => z7.object({
   results: model,
-  position: z6.number()
+  position: z7.number()
 });
-var SearchModel = z6.object({
+var SearchModel = z7.object({
   albums: SearchResponseModel(
-    z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        image: z6.array(DownloadLinkModel),
-        artist: z6.string(),
-        url: z6.string(),
-        type: z6.string(),
-        description: z6.string(),
-        year: z6.string(),
-        language: z6.string(),
-        songIds: z6.string()
+    z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        image: z7.array(DownloadLinkModel),
+        artist: z7.string(),
+        url: z7.string(),
+        type: z7.string(),
+        description: z7.string(),
+        year: z7.string(),
+        language: z7.string(),
+        songIds: z7.string()
       })
     )
   ),
   songs: SearchResponseModel(
-    z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        image: z6.array(DownloadLinkModel),
-        album: z6.string(),
-        url: z6.string(),
-        type: z6.string(),
-        description: z6.string(),
-        primaryArtists: z6.string(),
-        singers: z6.string(),
-        language: z6.string()
+    z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        image: z7.array(DownloadLinkModel),
+        album: z7.string(),
+        url: z7.string(),
+        type: z7.string(),
+        description: z7.string(),
+        primaryArtists: z7.string(),
+        singers: z7.string(),
+        language: z7.string()
       })
     )
   ),
   artists: SearchResponseModel(
-    z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        image: z6.array(DownloadLinkModel),
-        type: z6.string(),
-        description: z6.string(),
-        position: z6.number()
+    z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        image: z7.array(DownloadLinkModel),
+        type: z7.string(),
+        description: z7.string(),
+        position: z7.number()
       })
     )
   ),
   playlists: SearchResponseModel(
-    z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        image: z6.array(DownloadLinkModel),
-        url: z6.string(),
-        language: z6.string(),
-        type: z6.string(),
-        description: z6.string()
+    z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        image: z7.array(DownloadLinkModel),
+        url: z7.string(),
+        language: z7.string(),
+        type: z7.string(),
+        description: z7.string()
       })
     )
   ),
   topQuery: SearchResponseModel(
-    z6.array(
-      z6.object({
-        id: z6.string(),
-        title: z6.string(),
-        image: z6.array(DownloadLinkModel),
-        album: z6.string(),
-        url: z6.string(),
-        type: z6.string(),
-        description: z6.string(),
-        primaryArtists: z6.string(),
-        singers: z6.string(),
-        language: z6.string()
+    z7.array(
+      z7.object({
+        id: z7.string(),
+        title: z7.string(),
+        image: z7.array(DownloadLinkModel),
+        album: z7.string(),
+        url: z7.string(),
+        type: z7.string(),
+        description: z7.string(),
+        primaryArtists: z7.string(),
+        singers: z7.string(),
+        language: z7.string()
       })
     )
   )
 });
 
 // src/modules/search/models/search-artist.model.ts
-import { z as z7 } from "zod";
-var SearchArtistAPIResponseModel = z7.object({
-  total: z7.number(),
-  start: z7.number(),
-  results: z7.array(
-    z7.object({
-      name: z7.string(),
-      id: z7.string(),
-      ctr: z7.number(),
-      entity: z7.number(),
-      image: z7.string().url(),
-      role: z7.string(),
-      perma_url: z7.string().url(),
-      type: z7.string(),
-      mini_obj: z7.boolean(),
-      isRadioPresent: z7.boolean(),
-      is_followed: z7.boolean()
+import { z as z8 } from "zod";
+var SearchArtistAPIResponseModel = z8.object({
+  total: z8.number(),
+  start: z8.number(),
+  results: z8.array(
+    z8.object({
+      name: z8.string(),
+      id: z8.string(),
+      ctr: z8.number(),
+      entity: z8.number(),
+      image: z8.string().url(),
+      role: z8.string(),
+      perma_url: z8.string().url(),
+      type: z8.string(),
+      mini_obj: z8.boolean(),
+      isRadioPresent: z8.boolean(),
+      is_followed: z8.boolean()
     })
   )
 });
-var SearchArtistModel = z7.object({
-  total: z7.number(),
-  start: z7.number(),
-  results: z7.array(
-    z7.object({
-      id: z7.string(),
-      name: z7.string(),
-      role: z7.string(),
-      type: z7.string(),
-      image: z7.array(DownloadLinkModel),
-      url: z7.string()
+var SearchArtistModel = z8.object({
+  total: z8.number(),
+  start: z8.number(),
+  results: z8.array(
+    z8.object({
+      id: z8.string(),
+      name: z8.string(),
+      role: z8.string(),
+      type: z8.string(),
+      image: z8.array(DownloadLinkModel),
+      url: z8.string()
     })
   )
 });
 
 // src/modules/search/models/search-song.model.ts
-import { z as z8 } from "zod";
-var SearchSongAPIResponseModel = z8.object({
-  total: z8.number(),
-  start: z8.number(),
-  results: z8.array(SongAPIResponseModel)
+import { z as z9 } from "zod";
+var SearchSongAPIResponseModel = z9.object({
+  total: z9.number(),
+  start: z9.number(),
+  results: z9.array(SongAPIResponseModel)
 });
-var SearchSongModel = z8.object({
-  total: z8.number(),
-  start: z8.number(),
-  results: z8.array(SongModel)
+var SearchSongModel = z9.object({
+  total: z9.number(),
+  start: z9.number(),
+  results: z9.array(SongModel)
 });
 
 // src/modules/search/models/search-album.model.ts
-import { z as z9 } from "zod";
-var SearchAlbumAPIResponseModel = z9.object({
-  total: z9.number(),
-  start: z9.number(),
-  results: z9.array(
-    z9.object({
-      id: z9.string(),
-      title: z9.string(),
-      subtitle: z9.string(),
-      header_desc: z9.string(),
-      type: z9.string(),
-      perma_url: z9.string(),
-      image: z9.string(),
-      language: z9.string(),
-      year: z9.string(),
-      play_count: z9.string(),
-      explicit_content: z9.string(),
-      list_count: z9.string(),
-      list_type: z9.string(),
-      list: z9.array(SongAPIResponseModel),
-      more_info: z9.object({
-        query: z9.string(),
-        text: z9.string(),
-        music: z9.string(),
-        song_count: z9.string(),
-        artistMap: SongAPIResponseModel.shape.more_info.shape.artistMap
-      })
-    })
-  )
-});
-var SearchAlbumModel = z9.object({
-  total: z9.number(),
-  start: z9.number(),
-  results: z9.array(
-    z9.object({
-      id: z9.string(),
-      name: z9.string(),
-      description: z9.string(),
-      year: z9.number().nullable(),
-      type: z9.string(),
-      playCount: z9.number().nullable(),
-      language: z9.string(),
-      explicitContent: z9.boolean(),
-      artists: z9.object(SongModel.shape.artists.shape),
-      url: z9.string(),
-      image: z9.array(DownloadLinkModel)
-    })
-  )
-});
-
-// src/modules/search/models/search-playlist.model.ts
 import { z as z10 } from "zod";
-var SearchPlaylistAPIResponseModel = z10.object({
+var SearchAlbumAPIResponseModel = z10.object({
   total: z10.number(),
   start: z10.number(),
   results: z10.array(
@@ -884,43 +847,94 @@ var SearchPlaylistAPIResponseModel = z10.object({
       id: z10.string(),
       title: z10.string(),
       subtitle: z10.string(),
+      header_desc: z10.string(),
       type: z10.string(),
-      image: z10.string(),
       perma_url: z10.string(),
-      more_info: z10.object({
-        uid: z10.string(),
-        firstname: z10.string(),
-        artist_name: z10.any(),
-        entity_type: z10.string(),
-        entity_sub_type: z10.string(),
-        video_available: z10.boolean(),
-        is_dolby_content: z10.any(),
-        sub_types: z10.any(),
-        images: z10.any(),
-        lastname: z10.string(),
-        song_count: z10.string(),
-        language: z10.string()
-      }),
+      image: z10.string(),
+      language: z10.string(),
+      year: z10.string(),
+      play_count: z10.string(),
       explicit_content: z10.string(),
-      mini_obj: z10.boolean(),
-      numsongs: z10.any()
+      list_count: z10.string(),
+      list_type: z10.string(),
+      list: z10.array(SongAPIResponseModel),
+      more_info: z10.object({
+        query: z10.string(),
+        text: z10.string(),
+        music: z10.string(),
+        song_count: z10.string(),
+        artistMap: SongAPIResponseModel.shape.more_info.shape.artistMap
+      })
     })
   )
 });
-var SearchPlaylistModel = z10.object({
+var SearchAlbumModel = z10.object({
   total: z10.number(),
   start: z10.number(),
   results: z10.array(
-    // TODO: Do this for all search models
     z10.object({
       id: z10.string(),
       name: z10.string(),
+      description: z10.string(),
+      year: z10.number().nullable(),
       type: z10.string(),
-      image: z10.array(DownloadLinkModel),
-      url: z10.string(),
-      songCount: z10.number().nullable(),
+      playCount: z10.number().nullable(),
       language: z10.string(),
-      explicitContent: z10.boolean()
+      explicitContent: z10.boolean(),
+      artists: z10.object(SongModel.shape.artists.shape),
+      url: z10.string(),
+      image: z10.array(DownloadLinkModel)
+    })
+  )
+});
+
+// src/modules/search/models/search-playlist.model.ts
+import { z as z11 } from "zod";
+var SearchPlaylistAPIResponseModel = z11.object({
+  total: z11.number(),
+  start: z11.number(),
+  results: z11.array(
+    z11.object({
+      id: z11.string(),
+      title: z11.string(),
+      subtitle: z11.string(),
+      type: z11.string(),
+      image: z11.string(),
+      perma_url: z11.string(),
+      more_info: z11.object({
+        uid: z11.string(),
+        firstname: z11.string(),
+        artist_name: z11.any(),
+        entity_type: z11.string(),
+        entity_sub_type: z11.string(),
+        video_available: z11.boolean(),
+        is_dolby_content: z11.any(),
+        sub_types: z11.any(),
+        images: z11.any(),
+        lastname: z11.string(),
+        song_count: z11.string(),
+        language: z11.string()
+      }),
+      explicit_content: z11.string(),
+      mini_obj: z11.boolean(),
+      numsongs: z11.any()
+    })
+  )
+});
+var SearchPlaylistModel = z11.object({
+  total: z11.number(),
+  start: z11.number(),
+  results: z11.array(
+    // TODO: Do this for all search models
+    z11.object({
+      id: z11.string(),
+      name: z11.string(),
+      type: z11.string(),
+      image: z11.array(DownloadLinkModel),
+      url: z11.string(),
+      songCount: z11.number().nullable(),
+      language: z11.string(),
+      explicitContent: z11.boolean()
     })
   )
 });
@@ -1184,8 +1198,8 @@ var SearchController = class {
         description: "Search for songs, albums, artists, and playlists based on the provided query string.",
         operationId: "globalSearch",
         request: {
-          query: z11.object({
-            query: z11.string().openapi({
+          query: z12.object({
+            query: z12.string().openapi({
               title: "Search query",
               description: "Search query",
               type: "string",
@@ -1198,8 +1212,8 @@ var SearchController = class {
             description: "Successful global search",
             content: {
               "application/json": {
-                schema: z11.object({
-                  success: z11.boolean().openapi({
+                schema: z12.object({
+                  success: z12.boolean().openapi({
                     description: "Indicates whether the search was successful",
                     type: "boolean",
                     example: true
@@ -1228,21 +1242,21 @@ var SearchController = class {
         description: "Search for songs based on the provided query",
         operationId: "searchSongs",
         request: {
-          query: z11.object({
-            query: z11.string().openapi({
+          query: z12.object({
+            query: z12.string().openapi({
               title: "Search query",
               description: "Search query for songs",
               type: "string",
               example: "Believer"
             }),
-            page: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            page: z12.string().pipe(z12.coerce.number()).optional().openapi({
               title: "Page Number",
               description: "The page number of the search results to retrieve",
               type: "integer",
               example: "0",
               default: "0"
             }),
-            limit: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            limit: z12.string().pipe(z12.coerce.number()).optional().openapi({
               title: "Limit",
               description: "Number of search results per page",
               type: "integer",
@@ -1256,8 +1270,8 @@ var SearchController = class {
             description: "Successful response with song search results",
             content: {
               "application/json": {
-                schema: z11.object({
-                  success: z11.boolean().openapi({
+                schema: z12.object({
+                  success: z12.boolean().openapi({
                     description: "Indicates whether the song search was successful",
                     type: "boolean",
                     example: true
@@ -1286,19 +1300,19 @@ var SearchController = class {
         description: "Search for albums based on the provided query",
         operationId: "searchAlbums",
         request: {
-          query: z11.object({
-            query: z11.string().openapi({
+          query: z12.object({
+            query: z12.string().openapi({
               description: "Search query for albums",
               type: "string",
               example: "Evolve"
             }),
-            page: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            page: z12.string().pipe(z12.coerce.number()).optional().openapi({
               description: "The page number of the search results to retrieve",
               type: "integer",
               example: "0",
               default: "0"
             }),
-            limit: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            limit: z12.string().pipe(z12.coerce.number()).optional().openapi({
               description: "The number of search results per page",
               type: "integer",
               example: "10",
@@ -1311,8 +1325,8 @@ var SearchController = class {
             description: "Successful response with album search results",
             content: {
               "application/json": {
-                schema: z11.object({
-                  success: z11.boolean().openapi({
+                schema: z12.object({
+                  success: z12.boolean().openapi({
                     description: "Indicates whether the album search was successful",
                     type: "boolean",
                     example: true
@@ -1341,21 +1355,21 @@ var SearchController = class {
         description: "Search for artists based on the provided query",
         operationId: "searchArtists",
         request: {
-          query: z11.object({
-            query: z11.string().openapi({
+          query: z12.object({
+            query: z12.string().openapi({
               title: "Search query",
               description: "Search query for artists",
               type: "string",
               example: "Adele"
             }),
-            page: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            page: z12.string().pipe(z12.coerce.number()).optional().openapi({
               title: "Page Number",
               description: "The page number of the search results to retrieve",
               type: "integer",
               example: "0",
               default: "0"
             }),
-            limit: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            limit: z12.string().pipe(z12.coerce.number()).optional().openapi({
               title: "Limit",
               description: "Number of search results per page",
               type: "integer",
@@ -1369,8 +1383,8 @@ var SearchController = class {
             description: "Successful response with artist search results",
             content: {
               "application/json": {
-                schema: z11.object({
-                  success: z11.boolean().openapi({
+                schema: z12.object({
+                  success: z12.boolean().openapi({
                     description: "Indicates whether the artist search was successful",
                     type: "boolean",
                     example: true
@@ -1399,21 +1413,21 @@ var SearchController = class {
         description: "Search for playlists based on the provided query",
         operationId: "searchPlaylists",
         request: {
-          query: z11.object({
-            query: z11.string().openapi({
+          query: z12.object({
+            query: z12.string().openapi({
               title: "Search query",
               description: "Search query for playlists",
               type: "string",
               example: "Indie"
             }),
-            page: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            page: z12.string().pipe(z12.coerce.number()).optional().openapi({
               title: "Page Number",
               description: "The page number of the search results to retrieve",
               type: "integer",
               example: "0",
               default: "0"
             }),
-            limit: z11.string().pipe(z11.coerce.number()).optional().openapi({
+            limit: z12.string().pipe(z12.coerce.number()).optional().openapi({
               title: "Limit",
               description: "Number of search results per page",
               type: "integer",
@@ -1427,8 +1441,8 @@ var SearchController = class {
             description: "Successful response with playlist search results",
             content: {
               "application/json": {
-                schema: z11.object({
-                  success: z11.boolean().openapi({
+                schema: z12.object({
+                  success: z12.boolean().openapi({
                     description: "Indicates whether the playlist search was successful",
                     type: "boolean",
                     example: true
@@ -1559,7 +1573,7 @@ var SongService = class {
 };
 
 // src/modules/songs/controllers/song.controller.ts
-import { z as z12 } from "zod";
+import { z as z13 } from "zod";
 var SongController = class {
   controller;
   static songClient;
@@ -1578,14 +1592,14 @@ var SongController = class {
         description: "Retrieve songs by a comma-separated list of IDs or by a direct link to the song on JioSaavn.",
         operationId: "getSongByIdsOrLink",
         request: {
-          query: z12.object({
-            ids: z12.string().optional().openapi({
+          query: z13.object({
+            ids: z13.string().optional().openapi({
               title: "Song IDs",
               description: "Comma-separated list of song IDs",
               type: "string",
               example: "3IoDK8qI,4IoDK8qI,5IoDK8qI"
             }),
-            link: z12.string().url().optional().transform((value) => value?.match(/jiosaavn\.com\/song\/[^/]+\/([^/]+)$/)?.[1]).openapi({
+            link: z13.string().url().optional().transform((value) => value?.match(/jiosaavn\.com\/song\/[^/]+\/([^/]+)$/)?.[1]).openapi({
               title: "Song Link",
               description: "A direct link to the song on JioSaavn",
               type: "string",
@@ -1598,13 +1612,13 @@ var SongController = class {
             description: "Successful response with song details",
             content: {
               "application/json": {
-                schema: z12.object({
-                  success: z12.boolean().openapi({
+                schema: z13.object({
+                  success: z13.boolean().openapi({
                     description: "Indicates whether the request was successful",
                     type: "boolean",
                     example: true
                   }),
-                  data: z12.array(SongModel).openapi({
+                  data: z13.array(SongModel).openapi({
                     title: "Song Details",
                     description: "Array of song details"
                   })
@@ -1634,8 +1648,8 @@ var SongController = class {
         description: "Retrieve a song by its ID. Optionally, include lyrics in the response.",
         operationId: "getSongById",
         request: {
-          params: z12.object({
-            id: z12.string().openapi({
+          params: z13.object({
+            id: z13.string().openapi({
               title: "Song ID",
               description: "ID of the song to retrieve",
               type: "string",
@@ -1648,13 +1662,13 @@ var SongController = class {
             description: "Successful response with song details",
             content: {
               "application/json": {
-                schema: z12.object({
-                  success: z12.boolean().openapi({
+                schema: z13.object({
+                  success: z13.boolean().openapi({
                     description: "Indicates whether the request was successful",
                     type: "boolean",
                     example: true
                   }),
-                  data: z12.array(SongModel).openapi({
+                  data: z13.array(SongModel).openapi({
                     description: "Array of songs"
                   })
                 })
@@ -1680,15 +1694,15 @@ var SongController = class {
         description: "Retrieve song suggestions based on the given song ID. This can be used to get similar songs to the one provided for infinite playback.",
         operationId: "getSongSuggestions",
         request: {
-          params: z12.object({
-            id: z12.string().openapi({
+          params: z13.object({
+            id: z13.string().openapi({
               description: "ID of the song to retrieve suggestions for",
               type: "string",
               example: "yDeAS8Eh"
             })
           }),
-          query: z12.object({
-            limit: z12.string().pipe(z12.coerce.number()).optional().openapi({
+          query: z13.object({
+            limit: z13.string().pipe(z13.coerce.number()).optional().openapi({
               description: "Limit the number of suggestions to retrieve",
               type: "number",
               title: "Limit",
@@ -1702,13 +1716,13 @@ var SongController = class {
             description: "Successful response with song suggestions",
             content: {
               "application/json": {
-                schema: z12.object({
-                  success: z12.boolean().openapi({
+                schema: z13.object({
+                  success: z13.boolean().openapi({
                     description: "Indicates whether the request was successful",
                     type: "boolean",
                     example: true
                   }),
-                  data: z12.array(SongModel).openapi({
+                  data: z13.array(SongModel).openapi({
                     description: "Array of song suggestions"
                   })
                 })
@@ -1731,30 +1745,8 @@ var SongController = class {
 import { createRoute as createRoute4, OpenAPIHono as OpenAPIHono4 } from "@hono/zod-openapi";
 
 // src/modules/artists/models/artist-album.model.ts
-import { z as z13 } from "zod";
-var ArtistAlbumAPIResponseModel = z13.object({
-  artistId: z13.string(),
-  name: z13.string(),
-  subtitle: z13.string(),
-  image: z13.string(),
-  follower_count: z13.string(),
-  type: z13.string(),
-  isVerified: z13.boolean(),
-  dominantLanguage: z13.string(),
-  dominantType: z13.string(),
-  topAlbums: z13.object({
-    albums: z13.array(AlbumAPIResponseModel),
-    total: z13.number()
-  })
-});
-var ArtistAlbumModel = z13.object({
-  total: z13.number(),
-  albums: z13.array(AlbumModel)
-});
-
-// src/modules/artists/models/artist-song.model.ts
 import { z as z14 } from "zod";
-var ArtistSongAPIResponseModel = z14.object({
+var ArtistAlbumAPIResponseModel = z14.object({
   artistId: z14.string(),
   name: z14.string(),
   subtitle: z14.string(),
@@ -1764,19 +1756,19 @@ var ArtistSongAPIResponseModel = z14.object({
   isVerified: z14.boolean(),
   dominantLanguage: z14.string(),
   dominantType: z14.string(),
-  topSongs: z14.object({
-    songs: z14.array(SongAPIResponseModel),
+  topAlbums: z14.object({
+    albums: z14.array(AlbumAPIResponseModel),
     total: z14.number()
   })
 });
-var ArtistSongModel = z14.object({
+var ArtistAlbumModel = z14.object({
   total: z14.number(),
-  songs: z14.array(SongModel)
+  albums: z14.array(AlbumModel)
 });
 
-// src/modules/artists/models/artist.model.ts
+// src/modules/artists/models/artist-song.model.ts
 import { z as z15 } from "zod";
-var ArtistAPIResponseModel = z15.object({
+var ArtistSongAPIResponseModel = z15.object({
   artistId: z15.string(),
   name: z15.string(),
   subtitle: z15.string(),
@@ -1786,159 +1778,181 @@ var ArtistAPIResponseModel = z15.object({
   isVerified: z15.boolean(),
   dominantLanguage: z15.string(),
   dominantType: z15.string(),
-  topSongs: z15.array(SongAPIResponseModel),
-  topAlbums: z15.array(AlbumAPIResponseModel),
-  singles: z15.array(SongAPIResponseModel),
-  dedicated_artist_playlist: z15.array(
-    z15.object({
-      id: z15.string(),
-      title: z15.string(),
-      subtitle: z15.string(),
-      type: z15.string(),
-      image: z15.string(),
-      perma_url: z15.string(),
-      more_info: z15.object({
-        uid: z15.string(),
-        firstname: z15.string(),
-        artist_name: z15.array(z15.string()),
-        entity_type: z15.string(),
-        entity_sub_type: z15.string(),
-        video_available: z15.boolean(),
-        is_dolby_content: z15.any(),
-        sub_types: z15.any(),
-        images: z15.any(),
-        lastname: z15.string(),
-        song_count: z15.string(),
-        language: z15.string()
-      }),
-      explicit_content: z15.string(),
-      mini_obj: z15.boolean(),
-      numsongs: z15.number()
-    })
-  ),
-  featured_artist_playlist: z15.array(
-    z15.object({
-      id: z15.string(),
-      title: z15.string(),
-      subtitle: z15.string(),
-      type: z15.string(),
-      image: z15.string(),
-      perma_url: z15.string(),
-      more_info: z15.object({
-        uid: z15.string(),
-        firstname: z15.string(),
-        artist_name: z15.any(),
-        entity_type: z15.string(),
-        entity_sub_type: z15.string(),
-        video_available: z15.boolean(),
-        is_dolby_content: z15.any(),
-        sub_types: z15.any(),
-        images: z15.any(),
-        lastname: z15.string(),
-        song_count: z15.string(),
-        language: z15.string()
-      }),
-      explicit_content: z15.string(),
-      mini_obj: z15.boolean(),
-      numsongs: z15.number()
-    })
-  ),
-  similarArtists: z15.array(
-    z15.object({
-      _id: z15.string(),
-      similar: z15.string(),
-      languages: z15.string(),
-      isVerified: z15.string(),
-      image_url: z15.string(),
-      wiki: z15.string(),
-      roles: z15.string(),
-      combine_artist_pages: z15.number(),
-      webp: z15.boolean(),
-      search_keywords: z15.string(),
-      replace_with_primary_artists: z15.number(),
-      twitter: z15.string(),
-      dob: z15.string(),
-      aka: z15.string(),
-      name: z15.string(),
-      primary_artist_id: z15.string(),
-      id: z15.string(),
-      fb: z15.string(),
-      bio: z15.string(),
-      perma_url: z15.string(),
-      type: z15.string(),
-      mini_obj: z15.boolean(),
-      isRadioPresent: z15.boolean(),
-      dominantType: z15.string()
-    })
-  ),
-  isRadioPresent: z15.boolean(),
-  bio: z15.string(),
-  dob: z15.string(),
-  fb: z15.string(),
-  twitter: z15.string(),
-  wiki: z15.string(),
-  urls: z15.object({
-    albums: z15.string(),
-    bio: z15.string(),
-    comments: z15.string(),
-    songs: z15.string(),
-    overview: z15.string()
-  }),
-  availableLanguages: z15.array(z15.string()),
-  fan_count: z15.string(),
-  topEpisodes: z15.array(z15.any()),
-  is_followed: z15.boolean()
-}).extend({
-  id: z15.string(),
-  perma_url: z15.string()
+  topSongs: z15.object({
+    songs: z15.array(SongAPIResponseModel),
+    total: z15.number()
+  })
 });
-var ArtistModel = z15.object({
-  id: z15.string(),
-  name: z15.string(),
-  url: z15.string(),
-  type: z15.string(),
-  image: z15.array(DownloadLinkModel),
-  followerCount: z15.number().nullable(),
-  fanCount: z15.string().nullable(),
-  isVerified: z15.boolean().nullable(),
-  dominantLanguage: z15.string().nullable(),
-  dominantType: z15.string().nullable(),
-  bio: z15.array(
-    z15.object({
-      text: z15.string().nullable(),
-      title: z15.string().nullable(),
-      sequence: z15.number().nullable()
+var ArtistSongModel = z15.object({
+  total: z15.number(),
+  songs: z15.array(SongModel)
+});
+
+// src/modules/artists/models/artist.model.ts
+import { z as z16 } from "zod";
+var ArtistAPIResponseModel = z16.object({
+  artistId: z16.string(),
+  name: z16.string(),
+  subtitle: z16.string(),
+  image: z16.string(),
+  follower_count: z16.string(),
+  type: z16.string(),
+  isVerified: z16.boolean(),
+  dominantLanguage: z16.string(),
+  dominantType: z16.string(),
+  topSongs: z16.array(SongAPIResponseModel),
+  topAlbums: z16.array(AlbumAPIResponseModel),
+  singles: z16.array(SongAPIResponseModel),
+  dedicated_artist_playlist: z16.array(
+    z16.object({
+      id: z16.string(),
+      title: z16.string(),
+      subtitle: z16.string(),
+      type: z16.string(),
+      image: z16.string(),
+      perma_url: z16.string(),
+      more_info: z16.object({
+        uid: z16.string(),
+        firstname: z16.string(),
+        artist_name: z16.array(z16.string()),
+        entity_type: z16.string(),
+        entity_sub_type: z16.string(),
+        video_available: z16.boolean(),
+        is_dolby_content: z16.any(),
+        sub_types: z16.any(),
+        images: z16.any(),
+        lastname: z16.string(),
+        song_count: z16.string(),
+        language: z16.string()
+      }),
+      explicit_content: z16.string(),
+      mini_obj: z16.boolean(),
+      numsongs: z16.number()
+    })
+  ),
+  featured_artist_playlist: z16.array(
+    z16.object({
+      id: z16.string(),
+      title: z16.string(),
+      subtitle: z16.string(),
+      type: z16.string(),
+      image: z16.string(),
+      perma_url: z16.string(),
+      more_info: z16.object({
+        uid: z16.string(),
+        firstname: z16.string(),
+        artist_name: z16.any(),
+        entity_type: z16.string(),
+        entity_sub_type: z16.string(),
+        video_available: z16.boolean(),
+        is_dolby_content: z16.any(),
+        sub_types: z16.any(),
+        images: z16.any(),
+        lastname: z16.string(),
+        song_count: z16.string(),
+        language: z16.string()
+      }),
+      explicit_content: z16.string(),
+      mini_obj: z16.boolean(),
+      numsongs: z16.number()
+    })
+  ),
+  similarArtists: z16.array(
+    z16.object({
+      _id: z16.string(),
+      similar: z16.string(),
+      languages: z16.string(),
+      isVerified: z16.string(),
+      image_url: z16.string(),
+      wiki: z16.string(),
+      roles: z16.string(),
+      combine_artist_pages: z16.number(),
+      webp: z16.boolean(),
+      search_keywords: z16.string(),
+      replace_with_primary_artists: z16.number(),
+      twitter: z16.string(),
+      dob: z16.string(),
+      aka: z16.string(),
+      name: z16.string(),
+      primary_artist_id: z16.string(),
+      id: z16.string(),
+      fb: z16.string(),
+      bio: z16.string(),
+      perma_url: z16.string(),
+      type: z16.string(),
+      mini_obj: z16.boolean(),
+      isRadioPresent: z16.boolean(),
+      dominantType: z16.string()
+    })
+  ),
+  isRadioPresent: z16.boolean(),
+  bio: z16.string(),
+  dob: z16.string(),
+  fb: z16.string(),
+  twitter: z16.string(),
+  wiki: z16.string(),
+  urls: z16.object({
+    albums: z16.string(),
+    bio: z16.string(),
+    comments: z16.string(),
+    songs: z16.string(),
+    overview: z16.string()
+  }),
+  availableLanguages: z16.array(z16.string()),
+  fan_count: z16.string(),
+  topEpisodes: z16.array(z16.any()),
+  is_followed: z16.boolean()
+}).extend({
+  id: z16.string(),
+  perma_url: z16.string()
+});
+var ArtistModel = z16.object({
+  id: z16.string(),
+  name: z16.string(),
+  url: z16.string(),
+  type: z16.string(),
+  image: z16.array(DownloadLinkModel),
+  followerCount: z16.number().nullable(),
+  fanCount: z16.string().nullable(),
+  isVerified: z16.boolean().nullable(),
+  dominantLanguage: z16.string().nullable(),
+  dominantType: z16.string().nullable(),
+  bio: z16.array(
+    z16.object({
+      text: z16.string().nullable(),
+      title: z16.string().nullable(),
+      sequence: z16.number().nullable()
     })
   ).nullable(),
-  dob: z15.string().nullable(),
-  fb: z15.string().nullable(),
-  twitter: z15.string().nullable(),
-  wiki: z15.string().nullable(),
-  availableLanguages: z15.array(z15.string()),
-  isRadioPresent: z15.boolean().nullable(),
-  topSongs: z15.array(SongModel).nullable(),
-  topAlbums: z15.array(AlbumModel).nullable(),
-  singles: z15.array(SongModel).nullable(),
-  similarArtists: z15.array(
-    z15.object({
-      id: z15.string(),
-      name: z15.string(),
-      url: z15.string(),
-      image: z15.array(DownloadLinkModel),
-      languages: z15.record(z15.string(), z15.string()).nullable(),
-      wiki: z15.string(),
-      dob: z15.string(),
-      fb: z15.string(),
-      twitter: z15.string(),
-      isRadioPresent: z15.boolean(),
-      type: z15.string(),
-      dominantType: z15.string(),
-      aka: z15.string(),
-      bio: z15.string().nullable(),
-      similarArtists: z15.array(
-        z15.object({
-          id: z15.string(),
-          name: z15.string()
+  dob: z16.string().nullable(),
+  fb: z16.string().nullable(),
+  twitter: z16.string().nullable(),
+  wiki: z16.string().nullable(),
+  availableLanguages: z16.array(z16.string()),
+  isRadioPresent: z16.boolean().nullable(),
+  topSongs: z16.array(SongModel).nullable(),
+  topAlbums: z16.array(AlbumModel).nullable(),
+  singles: z16.array(SongModel).nullable(),
+  similarArtists: z16.array(
+    z16.object({
+      id: z16.string(),
+      name: z16.string(),
+      url: z16.string(),
+      image: z16.array(DownloadLinkModel),
+      languages: z16.record(z16.string(), z16.string()).nullable(),
+      wiki: z16.string(),
+      dob: z16.string(),
+      fb: z16.string(),
+      twitter: z16.string(),
+      isRadioPresent: z16.boolean(),
+      type: z16.string(),
+      dominantType: z16.string(),
+      aka: z16.string(),
+      bio: z16.string().nullable(),
+      similarArtists: z16.array(
+        z16.object({
+          id: z16.string(),
+          name: z16.string()
         })
       ).nullable()
     })
@@ -2063,7 +2077,7 @@ var ArtistService = class {
 };
 
 // src/modules/artists/controllers/artist.controller.ts
-import { z as z16 } from "zod";
+import { z as z17 } from "zod";
 var ArtistController = class {
   controller;
   artistService;
@@ -2081,44 +2095,44 @@ var ArtistController = class {
         description: `Retrieve artists by ID or by a direct artist link.`,
         operationId: "getArtistByIdOrLink",
         request: {
-          query: z16.object({
-            id: z16.string().optional().openapi({
+          query: z17.object({
+            id: z17.string().optional().openapi({
               title: "Artist ID",
               description: "Artist ID",
               type: "string",
               example: "1274170"
             }),
-            link: z16.string().url().optional().transform((value) => value?.match(/jiosaavn\.com\/artist\/[^/]+\/([^/]+)$/)?.[1]).openapi({
+            link: z17.string().url().optional().transform((value) => value?.match(/jiosaavn\.com\/artist\/[^/]+\/([^/]+)$/)?.[1]).openapi({
               title: "Artist Link",
               description: "A direct link to the artist on JioSaavn",
               type: "string",
               example: "https://www.jiosaavn.com/artist/dua-lipa-songs/r-OWIKgpX2I_"
             }),
-            page: z16.string().pipe(z16.coerce.number()).optional().openapi({
+            page: z17.string().pipe(z17.coerce.number()).optional().openapi({
               title: "Page number",
               description: "page number",
               type: "number",
               example: "1"
             }),
-            songCount: z16.string().pipe(z16.coerce.number()).optional().openapi({
+            songCount: z17.string().pipe(z17.coerce.number()).optional().openapi({
               title: "Song count",
               description: "Number of songs to fetch",
               type: "number",
               example: "10"
             }),
-            albumCount: z16.string().pipe(z16.coerce.number()).optional().openapi({
+            albumCount: z17.string().pipe(z17.coerce.number()).optional().openapi({
               title: "Album count",
               description: "Number of albums to fetch",
               type: "number",
               example: "10"
             }),
-            sortBy: z16.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
+            sortBy: z17.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
               title: "Sort by",
               description: "sort by",
               type: "string",
               example: "popularity"
             }),
-            sortOrder: z16.enum(["asc", "desc"]).optional().openapi({
+            sortOrder: z17.enum(["asc", "desc"]).optional().openapi({
               title: "Sort order",
               description: "sort order",
               type: "string",
@@ -2132,8 +2146,8 @@ var ArtistController = class {
             description: "Successful response with artist details",
             content: {
               "application/json": {
-                schema: z16.object({
-                  success: z16.boolean().openapi({
+                schema: z17.object({
+                  success: z17.boolean().openapi({
                     description: "Indicates whether the request was successful",
                     type: "boolean",
                     example: true
@@ -2170,41 +2184,41 @@ var ArtistController = class {
         description: "Retrieve artist by ID",
         operationId: "getArtistById",
         request: {
-          params: z16.object({
-            id: z16.string().openapi({
+          params: z17.object({
+            id: z17.string().openapi({
               title: "Artist ID",
               description: "ID of the artist to retrieve",
               type: "string",
               example: "1274170"
             })
           }),
-          query: z16.object({
-            page: z16.string().pipe(z16.coerce.number()).optional().openapi({
+          query: z17.object({
+            page: z17.string().pipe(z17.coerce.number()).optional().openapi({
               title: "Page number",
               description: "The page number of the results to retrieve",
               type: "integer",
               example: "0"
             }),
-            songCount: z16.string().pipe(z16.coerce.number()).optional().openapi({
+            songCount: z17.string().pipe(z17.coerce.number()).optional().openapi({
               title: "Song count",
               description: "The number of songs to retrieve for the artist",
               type: "integer",
               example: "10"
             }),
-            albumCount: z16.string().pipe(z16.coerce.number()).optional().openapi({
+            albumCount: z17.string().pipe(z17.coerce.number()).optional().openapi({
               title: "Album count",
               description: "The number of albums to retrieve for the artist",
               type: "integer",
               example: "10"
             }),
-            sortBy: z16.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
+            sortBy: z17.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
               title: "Sort by",
               description: "The field to sort the results by",
               type: "string",
               example: "popularity",
               enum: ["popularity", "latest", "alphabetical"]
             }),
-            sortOrder: z16.enum(["asc", "desc"]).optional().openapi({
+            sortOrder: z17.enum(["asc", "desc"]).optional().openapi({
               title: "Sort order",
               description: "The order to sort the results by",
               type: "string",
@@ -2218,8 +2232,8 @@ var ArtistController = class {
             description: "Successful response with artist details",
             content: {
               "application/json": {
-                schema: z16.object({
-                  success: z16.boolean().openapi({
+                schema: z17.object({
+                  success: z17.boolean().openapi({
                     description: "Indicates whether the request was successful",
                     type: "boolean",
                     example: true
@@ -2257,29 +2271,29 @@ var ArtistController = class {
         description: "Retrieve a list of songs for a given artist by their ID, with optional sorting and pagination.",
         operationId: "getArtistSongs",
         request: {
-          params: z16.object({
-            id: z16.string().openapi({
+          params: z17.object({
+            id: z17.string().openapi({
               description: "ID of the artist to retrieve the songs for",
               type: "string",
               example: "1274170",
               default: "1274170"
             })
           }),
-          query: z16.object({
-            page: z16.string().pipe(z16.coerce.number()).optional().openapi({
+          query: z17.object({
+            page: z17.string().pipe(z17.coerce.number()).optional().openapi({
               description: "The page number of the results to retrieve",
               type: "number",
               example: "0",
               default: "0"
             }),
-            sortBy: z16.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
+            sortBy: z17.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
               description: "The criterion to sort the songs by",
               type: "string",
               example: "popularity",
               enum: ["popularity", "latest", "alphabetical"],
               default: "popularity"
             }),
-            sortOrder: z16.enum(["asc", "desc"]).optional().openapi({
+            sortOrder: z17.enum(["asc", "desc"]).optional().openapi({
               description: "The order to sort the songs",
               type: "string",
               example: "desc",
@@ -2293,8 +2307,8 @@ var ArtistController = class {
             description: "Successful response with a list of songs for the artist",
             content: {
               "application/json": {
-                schema: z16.object({
-                  success: z16.boolean().openapi({
+                schema: z17.object({
+                  success: z17.boolean().openapi({
                     description: "Indicates whether the request was successful",
                     type: "boolean",
                     example: true
@@ -2332,29 +2346,29 @@ var ArtistController = class {
         description: "Retrieve a list of albums for a given artist by their ID, with optional sorting and pagination.",
         operationId: "getArtistAlbums",
         request: {
-          params: z16.object({
-            id: z16.string().openapi({
+          params: z17.object({
+            id: z17.string().openapi({
               description: "ID of the artist to retrieve the albums for",
               type: "string",
               example: "1274170",
               default: "1274170"
             })
           }),
-          query: z16.object({
-            page: z16.string().pipe(z16.coerce.number()).optional().openapi({
+          query: z17.object({
+            page: z17.string().pipe(z17.coerce.number()).optional().openapi({
               description: "The page number of the results to retrieve",
               type: "number",
               example: "0",
               default: "0"
             }),
-            sortBy: z16.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
+            sortBy: z17.enum(["popularity", "latest", "alphabetical"]).optional().openapi({
               description: "The criterion to sort the albums by",
               type: "string",
               example: "popularity",
               enum: ["popularity", "latest", "alphabetical"],
               default: "popularity"
             }),
-            sortOrder: z16.enum(["asc", "desc"]).optional().openapi({
+            sortOrder: z17.enum(["asc", "desc"]).optional().openapi({
               description: "The order to sort the albums",
               type: "string",
               example: "desc",
@@ -2368,8 +2382,8 @@ var ArtistController = class {
             description: "Successful response with a list of albums for the artist",
             content: {
               "application/json": {
-                schema: z16.object({
-                  success: z16.boolean().openapi({
+                schema: z17.object({
+                  success: z17.boolean().openapi({
                     description: "Indicates whether the request was successful",
                     type: "boolean",
                     example: true
@@ -2402,72 +2416,72 @@ var ArtistController = class {
 };
 
 // src/modules/playlists/controllers/playlist.controller.ts
-import { createRoute as createRoute5, OpenAPIHono as OpenAPIHono5, z as z18 } from "@hono/zod-openapi";
+import { createRoute as createRoute5, OpenAPIHono as OpenAPIHono5, z as z19 } from "@hono/zod-openapi";
 
 // src/modules/playlists/models/playlist.model.ts
-import { z as z17 } from "zod";
-var PlaylistAPIResponseModel = z17.object({
-  id: z17.string(),
-  title: z17.string(),
-  subtitle: z17.string(),
-  header_desc: z17.string(),
-  type: z17.string(),
-  perma_url: z17.string(),
-  image: z17.string(),
-  language: z17.string(),
-  year: z17.string(),
-  play_count: z17.string(),
-  explicit_content: z17.string(),
-  list_count: z17.string(),
-  list_type: z17.string(),
-  list: z17.array(SongAPIResponseModel),
-  more_info: z17.object({
-    uid: z17.string(),
-    is_dolby_content: z17.boolean(),
-    subtype: z17.array(z17.string()).default([]),
-    last_updated: z17.string(),
-    username: z17.string(),
-    firstname: z17.string(),
-    lastname: z17.string(),
-    is_followed: z17.string(),
-    isFY: z17.boolean(),
-    follower_count: z17.string(),
-    fan_count: z17.string(),
-    playlist_type: z17.string(),
-    share: z17.string(),
-    sub_types: z17.array(z17.string()),
-    images: z17.array(z17.string()),
-    H2: z17.string().nullable(),
-    subheading: z17.string(),
-    video_count: z17.string(),
-    artists: z17.array(
-      z17.object({
-        id: z17.string(),
-        name: z17.string(),
-        role: z17.string(),
-        image: z17.string(),
-        type: z17.string(),
-        perma_url: z17.string()
+import { z as z18 } from "zod";
+var PlaylistAPIResponseModel = z18.object({
+  id: z18.string(),
+  title: z18.string(),
+  subtitle: z18.string(),
+  header_desc: z18.string(),
+  type: z18.string(),
+  perma_url: z18.string(),
+  image: z18.string(),
+  language: z18.string(),
+  year: z18.string(),
+  play_count: z18.string(),
+  explicit_content: z18.string(),
+  list_count: z18.string(),
+  list_type: z18.string(),
+  list: z18.array(SongAPIResponseModel),
+  more_info: z18.object({
+    uid: z18.string(),
+    is_dolby_content: z18.boolean(),
+    subtype: z18.array(z18.string()).default([]),
+    last_updated: z18.string(),
+    username: z18.string(),
+    firstname: z18.string(),
+    lastname: z18.string(),
+    is_followed: z18.string(),
+    isFY: z18.boolean(),
+    follower_count: z18.string(),
+    fan_count: z18.string(),
+    playlist_type: z18.string(),
+    share: z18.string(),
+    sub_types: z18.array(z18.string()),
+    images: z18.array(z18.string()),
+    H2: z18.string().nullable(),
+    subheading: z18.string(),
+    video_count: z18.string(),
+    artists: z18.array(
+      z18.object({
+        id: z18.string(),
+        name: z18.string(),
+        role: z18.string(),
+        image: z18.string(),
+        type: z18.string(),
+        perma_url: z18.string()
       })
     )
   })
 }).extend({
-  description: z17.string()
+  description: z18.string()
 });
-var PlaylistModel = z17.object({
-  id: z17.string(),
-  name: z17.string(),
-  description: z17.string().nullable(),
-  year: z17.number().nullable(),
-  type: z17.string(),
-  playCount: z17.number().nullable(),
-  language: z17.string(),
-  explicitContent: z17.boolean(),
-  songCount: z17.number().nullable(),
-  url: z17.string(),
-  image: z17.array(DownloadLinkModel),
-  songs: z17.array(SongModel).nullable(),
-  artists: z17.array(ArtistMapModel).nullable()
+var PlaylistModel = z18.object({
+  id: z18.string(),
+  name: z18.string(),
+  description: z18.string().nullable(),
+  year: z18.number().nullable(),
+  type: z18.string(),
+  playCount: z18.number().nullable(),
+  language: z18.string(),
+  explicitContent: z18.boolean(),
+  songCount: z18.number().nullable(),
+  url: z18.string(),
+  image: z18.array(DownloadLinkModel),
+  songs: z18.array(SongModel).nullable(),
+  artists: z18.array(ArtistMapModel).nullable()
 });
 
 // src/modules/playlists/helpers/playlist.helper.ts
@@ -2570,15 +2584,15 @@ var PlaylistController = class {
         description: "Retrieve a playlist by providing either an ID or a direct link to the playlist on JioSaavn.",
         operationId: "getPlaylistByIdOrLink",
         request: {
-          query: z18.object({
-            id: z18.string().optional().openapi({
+          query: z19.object({
+            id: z19.string().optional().openapi({
               title: "Playlist ID",
               description: "The unique ID of the playlist",
               type: "string",
               example: "82914609",
               default: "82914609"
             }),
-            link: z18.string().url().optional().transform((value) => {
+            link: z19.string().url().optional().transform((value) => {
               const matches = value?.match(
                 /(?:jiosaavn\.com|saavn\.com)\/(?:featured|s\/playlist)\/[^/]+\/([^/]+)$|\/([^/]+)$/
               );
@@ -2591,14 +2605,14 @@ var PlaylistController = class {
               example: "https://www.jiosaavn.com/featured/its-indie-english/AMoxtXyKHoU_",
               default: "https://www.jiosaavn.com/featured/its-indie-english/AMoxtXyKHoU_"
             }),
-            page: z18.string().pipe(z18.coerce.number()).optional().openapi({
+            page: z19.string().pipe(z19.coerce.number()).optional().openapi({
               title: "Page Number",
               description: "The page number of the songs to retrieve from the playlist",
               type: "integer",
               example: "0",
               default: "0"
             }),
-            limit: z18.string().pipe(z18.coerce.number()).optional().openapi({
+            limit: z19.string().pipe(z19.coerce.number()).optional().openapi({
               title: "Limit",
               description: "Number of songs to retrieve per page",
               type: "integer",
@@ -2612,8 +2626,8 @@ var PlaylistController = class {
             description: "Successful response with playlist details",
             content: {
               "application/json": {
-                schema: z18.object({
-                  success: z18.boolean().openapi({
+                schema: z19.object({
+                  success: z19.boolean().openapi({
                     description: "Indicates the success status of the request.",
                     type: "boolean",
                     example: true
